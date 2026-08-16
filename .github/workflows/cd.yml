@@ -14,11 +14,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Python dependencies
-        run: pip install -r requirements.txt
-
-      - name: Train model
-        run: python src/train.py
+      - name: Train model with Python 3.11
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE":/app \
+            -w /app \
+            python:3.11-slim \
+            sh -c "pip install --no-cache-dir -r requirements.txt && python src/train.py"
 
       - name: Build Docker image
         run: docker build -t iris-mlops:latest .
