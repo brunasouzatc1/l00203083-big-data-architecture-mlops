@@ -7,17 +7,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  docker:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: self-hosted
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
 
       - name: Install Python dependencies
         run: pip install -r requirements.txt
@@ -27,3 +22,12 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t iris-mlops:latest .
+
+      - name: Load image into Kind
+        run: kind load docker-image iris-mlops:latest --name three-node-cluster
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          kubectl rollout status deployment/iris-mlops
